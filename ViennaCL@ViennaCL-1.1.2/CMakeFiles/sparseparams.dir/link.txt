@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/sparseparams.dir/examples/parameters/sparse.cpp.o CMakeFiles/sparseparams.dir/external/pugixml/src/pugixml.cpp.o  -o sparseparams -rdynamic -lOpenCL 

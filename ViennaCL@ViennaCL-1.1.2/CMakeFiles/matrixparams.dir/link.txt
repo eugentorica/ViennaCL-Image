@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/matrixparams.dir/examples/parameters/matrix.cpp.o CMakeFiles/matrixparams.dir/external/pugixml/src/pugixml.cpp.o  -o matrixparams -rdynamic -lOpenCL 

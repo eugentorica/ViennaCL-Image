@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/blas1.dir/examples/tutorial/blas1.cpp.o  -o blas1 -rdynamic -lOpenCL 

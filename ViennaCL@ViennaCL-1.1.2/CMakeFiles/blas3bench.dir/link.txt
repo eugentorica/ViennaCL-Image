@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/blas3bench.dir/examples/benchmarks/blas3.cpp.o  -o blas3bench -rdynamic -lOpenCL 

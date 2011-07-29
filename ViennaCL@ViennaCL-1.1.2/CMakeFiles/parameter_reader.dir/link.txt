@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/parameter_reader.dir/examples/parameters/parameter_reader.cpp.o CMakeFiles/parameter_reader.dir/external/pugixml/src/pugixml.cpp.o  -o parameter_reader -rdynamic -lOpenCL 
