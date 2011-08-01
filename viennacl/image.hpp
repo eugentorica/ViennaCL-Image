@@ -44,37 +44,14 @@ public:
 		//val_ = viennacl::ocl::current_context().create_memory(CL_MEM_READ_WRITE, sizeof(TYPE));
 	}
 	/** @brief Allocates the memory for the scalar and sets it to the supplied value. */
-	explicit image(int width, int height, TYPE val) {
+	explicit image(int width, int height) {
 		//viennacl::linalg::kernels::image < TYPE, 1 > ::init();
 		cl_image_format image_format;
+		image_format.image_channel_data_type = CL_UNORM_INT8;
+		image_format.image_channel_order = CL_RGBA;
 		_pixels= viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE,&image_format,width,height);
 	}
 
-
-	//copy constructor
-	/** @brief Copy constructor. Allocates new memory for the scalar and copies the value of the supplied scalar */
-	/*
-	image(const image & other) :
-			val_(
-					viennacl::ocl::current_context().create_memory(
-							CL_MEM_READ_WRITE, sizeof(TYPE))) {
-		//copy value:
-		cl_int err = clEnqueueCopyBuffer(viennacl::ocl::get_queue().handle(),
-				other.handle(), handle(), 0, 0, sizeof(TYPE), 0, NULL, NULL);
-		VIENNACL_ERR_CHECK(err);
-	}
-
-	/** @brief Reads the value of the scalar from the GPU and returns the float or double value. */
-	/*
-	operator TYPE() const {
-		TYPE tmp;
-		cl_int err;
-		err = clEnqueueReadBuffer(viennacl::ocl::get_queue().handle(), val_,
-				CL_TRUE, 0, sizeof(TYPE), &tmp, 0, NULL, NULL);
-		VIENNACL_ERR_CHECK(err);
-		return tmp;
-	}
-    */
 	/** @brief Returns the OpenCL handle */
 	const viennacl::ocl::handle<cl_mem> & handle() const {
 		return _pixels;

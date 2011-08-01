@@ -78,18 +78,18 @@ ENDIF(BUILD_TESTING)
 
 #-----------------------------------------------------------------------------
 # add the source files which should be tested without the trailing *.cpp
-SET(PROGS scalar vector matrix sparse iterators blas3)
+SET(PROGS scalar vector matrix sparse image iterators blas3)
 #-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 FOREACH(PROG ${PROGS})
-   ADD_EXECUTABLE(${PROG} ../src/${PROG}.cpp)
+   ADD_EXECUTABLE(${PROG} ./src/${PROG}.cpp)
    ADD_test(${PROG} ${PROG})
    TARGET_LINK_LIBRARIES(${PROG} OpenCL)
 ENDFOREACH(PROG)
 
-ADD_EXECUTABLE(external_linkage  ../src/external_1.cpp
-                                 ../src/external_2.cpp)
+ADD_EXECUTABLE(external_linkage  ./src/external_1.cpp
+                                 ./src/external_2.cpp)
 
 #-----------------------------------------------------------------------------
 
