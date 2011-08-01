@@ -167,6 +167,19 @@ namespace viennacl
           return mem;
         }
 
+        viennacl::ocl::handle<cl_mem> create_image2d(cl_mem_flags flags,const cl_image_format *image_format,unsigned int width,unsigned int height,unsigned row_pitch = 0,void * ptr = NULL)
+		{
+		  #if defined(VIENNACL_DEBUG_ALL) || defined(VIENNACL_DEBUG_CONTEXT)
+          std::cout << "ViennaCL: Creating image of size: " << width << "x" << height << " for context " << h_ << std::endl;
+          #endif
+          if(ptr)
+        	  flags |= CL_MEM_COPY_HOST_PTR;
+          cl_int err;
+          viennacl::ocl::handle<cl_mem> mem = clCreateImage2D(handle(), flags,image_format, width, height, row_pitch, ptr, &err);
+          VIENNACL_ERR_CHECK(err);
+          return mem;
+		}
+
         /** @brief Creates a memory buffer within the context initialized from the supplied data
         *
         *  @param flags  OpenCL flags for the buffer creation
