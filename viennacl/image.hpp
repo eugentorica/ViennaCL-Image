@@ -11,7 +11,7 @@
 
 #include "viennacl/forwards.h"
 #include "viennacl/ocl/backend.hpp"
-#include "viennacl/linalg/kernels/scalar_kernels.h"
+#include "viennacl/linalg/kernels/image_kernels.h"
 
 #include <iostream>
 
@@ -32,7 +32,7 @@ namespace viennacl {
  *
  * @tparam TYPE  Either float or double. Checked at compile time.
  */
-template<class IMAGETYPE,unsigned int ALIGNMENT>
+template<cl_channel_order CHANNEL_ORDER,cl_channel_type CHANNEL_TYPE>
 class image {
 public:
 	/** @brief Returns the underlying host scalar type. */
@@ -45,10 +45,10 @@ public:
 	}
 	/** @brief Allocates the memory for the scalar and sets it to the supplied value. */
 	explicit image(int width, int height) {
-		//viennacl::linalg::kernels::image < TYPE, 1 > ::init();
+		viennacl::linalg::kernels::image <CHANNEL_ORDER, CHANNEL_TYPE> ::init();
 		cl_image_format image_format;
-		image_format.image_channel_data_type = CL_UNORM_INT8;
-		image_format.image_channel_order = CL_RGBA;
+		image_format.image_channel_data_type = CHANNEL_TYPE;
+		image_format.image_channel_order = CHANNEL_ORDER;
 		_pixels= viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE,&image_format,width,height);
 	}
 
