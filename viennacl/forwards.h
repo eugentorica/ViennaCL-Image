@@ -32,6 +32,13 @@
 #include <cstddef>
 #include "viennacl/ocl/forwards.h"
 
+// NOTE: Maybe should be placed somewhere else
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
+#include <CL/cl.h>
+#endif
+
 namespace viennacl
 {
   typedef std::size_t                                       vcl_size_t;
@@ -119,7 +126,10 @@ namespace viennacl
   class compressed_matrix;
   
   template<class SCALARTYPE, unsigned int ALIGNMENT = 128>
-  class coordinate_matrix;    
+  class coordinate_matrix;
+
+  template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+  class image;
   
   namespace tools
   {
