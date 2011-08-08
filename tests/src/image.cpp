@@ -45,6 +45,8 @@
 //
 // -------------------------------------------------------------
 //
+#define VIENNACL_DEBUG_ALL
+
 int test()
 {
 	int retval = EXIT_SUCCESS;
@@ -67,7 +69,9 @@ int test()
 	std::cout << "## Test :: Image 256x256" << std::endl;
 	std::cout << "----------------------------------------------" << std::endl;
 	std::cout << "----------------------------------------------" << std::endl;
-	viennacl::image<CL_RGBA,CL_UNORM_INT8> image2(256,256);
+	viennacl::image<CL_RGBA,CL_UNORM_INT8> image2(8,8);
+	viennacl::image<CL_RGBA,CL_UNORM_INT8> image3(8,8);
+	viennacl::image<CL_RGBA,CL_UNORM_INT8> image4 = image2 - image3;
 	std::cout << std::endl;
 	std::cout << "----------------------------------------------" << std::endl;
 	std::cout << std::endl;
