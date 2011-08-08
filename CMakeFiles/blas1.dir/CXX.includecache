@@ -65,6 +65,10 @@ cstddef
 -
 viennacl/ocl/forwards.h
 viennacl/viennacl/ocl/forwards.h
+OpenCL/cl.h
+-
+CL/cl.h
+-
 
 viennacl/linalg/inner_prod.hpp
 viennacl/forwards.h
