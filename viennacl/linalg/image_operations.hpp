@@ -16,18 +16,29 @@ namespace viennacl
   namespace linalg
   {
 
+  template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+  void add(viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1, viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2, viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
+     {
+ 	  //assert(img1.size() == img2.size());
+       //unsigned int size = std::min(img1.internal_size(), img2.internal_size());
+
+ 	  //unsigned int size = 0;
+       viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "add");
+
+       viennacl::ocl::enqueue(k(img1, img2, img3));
+     }
+
 
  template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
- void inplace_sub(viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1,
-		 	 	 const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2)
+ void sub(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1,const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2, viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
     {
 	  //assert(img1.size() == img2.size());
       //unsigned int size = std::min(img1.internal_size(), img2.internal_size());
 
-	  unsigned int size = 0;
-      viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "inplace_sub");
+	  //unsigned int size = 0;
+      viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "sub");
 
-      viennacl::ocl::enqueue(k(img1, img2, size));
+      viennacl::ocl::enqueue(k(img1, img2, img3));
     }
 
   }

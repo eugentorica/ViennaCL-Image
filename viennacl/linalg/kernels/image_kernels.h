@@ -25,7 +25,8 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 		viennacl::ocl::context & context_ = viennacl::ocl::current_context();
 		if (!init_done[context_.handle()]) {
 			std::string source;
-			source.append(image_inplace_sub);
+			source.append(image_add);
+			source.append(image_sub);
 
 			std::string prog_name = program_name();
 
@@ -35,7 +36,8 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 
 			context_.add_program(source, prog_name);
 			viennacl::ocl::program & prog_ = context_.get_program(prog_name);
-			prog_.add_kernel("inplace_sub");
+			prog_.add_kernel("add");
+			prog_.add_kernel("sub");
 			init_done[context_.handle()] = true;
 		}
 

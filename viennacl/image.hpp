@@ -42,7 +42,7 @@ public:
 	}
 
 	/** @brief */
-	explicit image(int width, int height) {
+	explicit image(int width, int height) : _width(width),_height(height) {
 		viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::init();
 		cl_image_format image_format;
 		image_format.image_channel_data_type = CHANNEL_TYPE;
@@ -56,10 +56,18 @@ public:
 		return _pixels;
 	}
 
-	image<CHANNEL_ORDER, CHANNEL_TYPE> & operator -=(
-			const image<CHANNEL_ORDER, CHANNEL_TYPE> & other) {
-		viennacl::linalg::inplace_sub(*this, other);
-		return *this;
+	image<CHANNEL_ORDER, CHANNEL_TYPE> operator + (const image<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
+	{
+		image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
+		viennacl::linalg::add(*this, other,result);
+		return result;
+	}
+
+	image<CHANNEL_ORDER, CHANNEL_TYPE> operator - (const image<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
+	{
+		image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
+		viennacl::linalg::sub(*this, other,result);
+		return result;
 	}
 
 private:
