@@ -42,13 +42,21 @@ public:
 	}
 
 	/** @brief */
-	explicit image(int width, int height) : _width(width),_height(height) {
+	explicit image(int width, int height,void* ptr=NULL) : _width(width),_height(height) {
+	  std::cout<<"RightBefore kernel init"<<std::endl;
 		viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::init();
+		std::cout<<"RightAfter kernel init"<<std::endl;
+
 		cl_image_format image_format;
 		image_format.image_channel_data_type = CHANNEL_TYPE;
 		image_format.image_channel_order = CHANNEL_ORDER;
-		_pixels = viennacl::ocl::current_context().create_image2d(
-				CL_MEM_READ_WRITE, &image_format, width, height);
+		std::cout<<"RightBefore create image"<<std::endl;
+		_pixels = viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE, &image_format, width, height,ptr);
+	}
+
+	explicit image(cl_mem existing_mem, int width, int height):_width(width),_height(height),_pixels(existing_mem)
+	{
+	  _pixels.inc();
 	}
 
 	/** @brief Returns the OpenCL handle */
@@ -70,8 +78,34 @@ public:
 		return result;
 	}
 
+  //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
+  /** @brief STL-like transfer of a GPU vector to the CPU. The cpu type is assumed to reside in a linear piece of memory, such as e.g. for std::vector.
+  *
+  * This method is faster than the plain copy() function, because entries are
+  * directly written to the cpu vector, starting with &(*cpu.begin()) However,
+  * keep in mind that the cpu type MUST represent a linear piece of
+  * memory, otherwise you will run into undefined behavior.
+  *
+  * @param gpu_begin  GPU iterator pointing to the beginning of the gpu vector (STL-like)
+  * @param gpu_end    GPU iterator pointing to the end of the vector (STL-like)
+  * @param cpu_begin  Output iterator for the cpu vector. The cpu vector must be at least as long as the gpu vector!
+  */
+	template <typename CPU_ITERATOR>
+  void fast_copy_cpu(CPU_ITERATOR cpu_begin)
+  {
+      size_t origin[3]={0,0,0};
+      size_t region[3]={_width,_height,1};
+
+      cl_int err = clEnqueueReadImage(viennacl::ocl::get_queue().handle(),
+                                      _pixels, CL_TRUE, origin,region,
+                                       0,0,&(*cpu_begin),0,NULL,NULL);
+
+      VIENNACL_ERR_CHECK(err);
+      viennacl::ocl::get_queue().finish();
+  }
+
 private:
-	viennacl::ocl::handle<cl_mem> _pixels;
+  viennacl::ocl::handle<cl_mem> _pixels;
 	unsigned int _width;
 	unsigned int _height;
 
