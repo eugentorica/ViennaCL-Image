@@ -22,8 +22,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/lu.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
+#include <boost/numeric/ublas/vector.hpp>
 //
 // *** ViennaCL
 //
@@ -38,14 +37,7 @@
 #include "viennacl/linalg/direct_solve.hpp"
 #include "examples/tutorial/Random.hpp"
 
-//#define cimg_display 0
-//#include "../lib/CImg.h"
-//#include "../lib/SDKUtil/include/SDKCommon.hpp"
-//#include "../lib/SDKUtil/include/SDKApplication.hpp"
-//#include "../lib/SDKUtil/include/SDKFile.hpp"
-#include "../lib/SDKUtil/SDKBitMap.cpp"
-
-
+#include <vector>
 //
 // -------------------------------------------------------------
 //
@@ -55,50 +47,91 @@
 //
 #define VIENNACL_DEBUG_ALL
 
-using namespace std;
+using namespace boost::numeric;
 
 int test()
 {
-	int retval = EXIT_SUCCESS;
-	std::cout << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "## Test :: Image" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << std::endl;
-	viennacl::image<CL_RGBA,CL_UNORM_INT8> image;
-	// --------------------------------------------------------------------------
-	std::cout << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << std::endl;
+  int retval = EXIT_SUCCESS;
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << std::endl;
 
-	std::cout << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "## Test :: Image 256x256" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	//cimg_library::CImg<unsigned char> img("/home/sanda/Desktop/CImg-1.5.0_beta/examples/img/lena.pgm");
-	//img.save("/home/sanda/Desktop/CImg-1.5.0_beta/examples/img/lena2.pgm");
-    streamsdk::SDKBitMap img;
-	img.load("/home/sanda/Desktop/CImg-1.5.0_beta/examples/img/lena2.pgm");
-	streamsdk::uchar4* d=  img.getPixels();
-	cl_uchar4* f;
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << "## Test :: Image 256x256" << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
 
-	viennacl::image<CL_RGBA,CL_UNORM_INT8> image2(8,8);
-	viennacl::image<CL_RGBA,CL_UNORM_INT8> image3(8,8);
-	viennacl::image<CL_RGBA,CL_UNORM_INT8> image4 = image2 + image3;
-	std::cout << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
-	std::cout << std::endl;
+  const int size = 2;
+  const int pixelSize = 4;
+  int c = 0;
+  unsigned char* srcImg2 = new unsigned char[pixelSize * size * size];
+  unsigned char* srcImg3 = new unsigned char[pixelSize * size * size];
 
-	return retval;
+  for(int i=0; i< pixelSize* size * size;i++)
+  {
+    srcImg2[i] = 124;
+    srcImg3[i] = 120;
+  }
+
+  std::vector<unsigned char> v(pixelSize * size * size);
+  for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
+    *iter=0;
+
+
+  viennacl::image<CL_RGBA, CL_UNORM_INT8> image2(size, size, (void*)srcImg2);
+  viennacl::image<CL_RGBA, CL_UNORM_INT8> image3(size, size, (void*)srcImg3);
+
+  (image2+image3).fast_copy_cpu(v.begin());
+
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+
+  std::cout << "Vector Init" << std::endl;
+  c = 0;
+  for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
+  {
+     std::cout << ((int)*iter ) << " ";
+     if (++c % 4 == 0)
+     {
+        std::cout<<std::endl;
+        c = 0;
+      }
+  }
+  std::cout<<" End Vector" << std::endl;
+
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << std::endl;
+
+  (image2 - image3).fast_copy_cpu(v.begin());
+  std::cout << "Vector Result" << std::endl;
+  c = 0;
+  for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
+  {
+     std::cout << ((int)*iter ) << " ";
+     if (++c % 4 == 0)
+     {
+        std::cout<<std::endl;
+        c = 0;
+      }
+   }
+   std::cout<<" End Vector" << std::endl;
+
+  delete[] srcImg2;
+  delete[] srcImg3;
+
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  std::cout << std::endl;
+
+  return retval;
 }
 
 int main()
 {
-	test();
+  test();
 }
 
 #endif /* IMAGE_CPP_ */
