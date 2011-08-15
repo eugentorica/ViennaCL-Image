@@ -167,7 +167,7 @@ namespace viennacl
           return mem;
         }
 
-        viennacl::ocl::handle<cl_mem> create_image2d(cl_mem_flags flags,const cl_image_format *image_format,unsigned int width,unsigned int height,unsigned row_pitch = 0,void * ptr = NULL)
+        viennacl::ocl::handle<cl_mem> create_image2d(cl_mem_flags flags,const cl_image_format *image_format,unsigned int width,unsigned int height,void * ptr = NULL, unsigned row_pitch = 0)
 		{
 		  #if defined(VIENNACL_DEBUG_ALL) || defined(VIENNACL_DEBUG_CONTEXT)
           std::cout << "ViennaCL: Creating image of size: " << width << "x" << height << " for context " << h_ << std::endl;
