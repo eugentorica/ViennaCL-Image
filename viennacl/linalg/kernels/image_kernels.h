@@ -32,7 +32,7 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 
 			#ifdef VIENNACL_BUILD_INFO
 			std::cout << "Creating program " << prog_name << std::endl;
-        	#endif
+      #endif
 
 			context_.add_program(source, prog_name);
 			viennacl::ocl::program & prog_ = context_.get_program(prog_name);
