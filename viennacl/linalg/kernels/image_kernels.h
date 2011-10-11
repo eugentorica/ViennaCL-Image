@@ -27,6 +27,7 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 			std::string source;
 			source.append(image_add);
 			source.append(image_sub);
+			source.append(image_gaussian_filter);
 
 			std::string prog_name = program_name();
 
@@ -38,6 +39,7 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 			viennacl::ocl::program & prog_ = context_.get_program(prog_name);
 			prog_.add_kernel("add");
 			prog_.add_kernel("sub");
+			prog_.add_kernel("gaussian_filter");
 			init_done[context_.handle()] = true;
 		}
 

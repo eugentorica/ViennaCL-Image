@@ -78,6 +78,26 @@ public:
 		return result;
 	}
 
+	template <typename KERNEL_COLLECTION_TYPE, typename KERNEL_ELEMENT_TYPE>
+  image<CHANNEL_ORDER, CHANNEL_TYPE> gausian_filter(KERNEL_COLLECTION_TYPE &kernel) const
+	  {
+	    float kernelTotalWeight;
+	    image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height);
+
+	    typename KERNEL_COLLECTION_TYPE::iterator it = kernel.begin();
+	    for(;it!=kernel.end();it++)
+	      kernelTotalWeight+=*it;
+
+	    // TODO: Find fast way to transfer CPU kernel to GPU one
+	    unsigned int kernelSize = kernel.size();
+	    vector<KERNEL_ELEMENT_TYPE> gpu_kernel(kernel.size());
+	    for(unsigned int gpuIndex = 0 ;gpuIndex<kernelSize; gpuIndex++)
+	      gpu_kernel[gpuIndex] = kernel[gpuIndex];
+
+	    viennacl::linalg::gaussian_filter(*this,result,gpu_kernel,kernelTotalWeight,kernelSize);
+	    return result;
+	  }
+
   //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
   /** @brief STL-like transfer of a GPU vector to the CPU. The cpu type is assumed to reside in a linear piece of memory, such as e.g. for std::vector.
   *

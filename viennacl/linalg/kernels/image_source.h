@@ -57,6 +57,51 @@ const char * const image_sub =
     "     write_imagef(dst,coord,val); \n"
     "}\n"
 		" \n"; //image_sub
+
+const char* const image_gaussian_filter =
+    "__kernel void gaussian_filter(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
+    "     constant float * kernelWeights, float kernelTotalWeight,unsigned int kernelSize)\n"
+    "{\n"
+
+    " int width = get_image_width(dstImg); \n"
+    " int height = get_image_height(dstImg); \n"
+    " int dimX = get_global_size(0); \n"
+    " int dimY = get_global_size(1); \n"
+    " int kernelEdgeSize = floor(sqrt((float)kernelSize));\n"
+
+    " int portionX = ceil(width / (float)dimX);\n"
+    " int portionY = ceil(height / (float)dimY);\n"
+    " const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | //Natural coordinates \n"
+    "                      CLK_ADDRESS_REPEAT | \n"
+    "                      CLK_FILTER_NEAREST; //Don't interpolate \n"
+    " for(int n = 0; n < portionY; n++)"
+    " {\n"
+    "   for(int m = 0; m < portionX; m++)"
+    "   {\n"
+    "     int xCoord = get_global_id(0) + m; \n"
+    "     int yCoord = get_global_id(1) + n; \n"
+    "     int2 outImageCoord = (int2) (xCoord, yCoord);\n"
+    "     if (outImageCoord.x < width && outImageCoord.y < height)\n"
+    "     {\n"
+    "       int2 startImageCoord = (int2) (xCoord - kernelEdgeSize / 2, yCoord - kernelEdgeSize / 2);\n"
+    "       int2 endImageCoord = (int2) (xCoord + kernelEdgeSize / 2 , yCoord + kernelEdgeSize / 2);\n"
+    "       int weight = 0;\n"
+    "       float4 outColor = (float4)(0, 0, 0, 0);\n"
+    "       for(int y = startImageCoord.y; y <= endImageCoord.y; y++)\n"
+    "       {\n"
+    "         for(int x= startImageCoord.x; x <= endImageCoord.x; x++)\n"
+    "         {\n"
+    "           outColor += (read_imagef(srcImg, sampler, (int2)(x, y)) * (kernelWeights[weight] / (float)kernelTotalWeight));\n"
+    "           weight += 1;\n"
+    "         }\n"
+    "       }\n"
+    "       // Write the output value to image\n"
+    "       write_imagef(dstImg, outImageCoord, outColor);\n"
+    "     }\n"
+    "   }\n"
+    " }\n"
+    "}\n";
+
 }
 }
 }
