@@ -38,6 +38,9 @@
 #include "examples/tutorial/Random.hpp"
 
 #include <vector>
+
+#define cimg_display 0
+#include "../../external/CImg.h"
 //
 // -------------------------------------------------------------
 //
@@ -67,56 +70,63 @@ int test()
   std::cout << "----------------------------------------------" << std::endl;
   std::cout << "----------------------------------------------" << std::endl;
 
-  const int size = 3;
-  const int pixelSize = 4;
+  cimg_library::CImg<unsigned char> srcImg("milla.bmp");
+  cimg_library::CImg<unsigned char> resultImg(srcImg.width(), srcImg.height(), srcImg.depth(), srcImg.spectrum());
+
+  int imgWidth = srcImg.width();
+  int imgHeight = srcImg.height();
+  const int pixelSize = 3;
   int c = 0;
-  std::vector<unsigned char> srcImg2(pixelSize * size * size);
-  unsigned char* srcImg3 = new unsigned char[pixelSize * size * size];
+  std::vector<unsigned char> srcImg2(pixelSize * imgWidth * imgHeight);
+
+  std::vector<unsigned char> srcImg3(pixelSize * imgWidth * imgHeight);
+
   srand ( time(NULL) );
 
   /* generate secret number: */
 
-  for(int i=0; i< pixelSize* size * size;i++)
+  for(int j=0; j< pixelSize; j++)
   {
-    srcImg2[i] = rand() % 255 + 1;
-    srcImg3[i] = 120;
+    for(int k=0; k<imgHeight; k++)
+      for(int i=0; i< imgWidth;i++)
+      {
+          //srcImg2[k*imgWidth*pixelSize +i*pixelSize + j] = srcImg(i,k,j);
+          srcImg2[j * imgWidth * imgHeight + k*imgWidth + i] = srcImg(i,k,j);
+          //srcImg2[i] = rand() % 255 + 1;
+          srcImg3[i] = 120;
+      }
   }
 
-  std::vector<unsigned char> v(pixelSize * size * size);
+  viennacl::image<CL_RGBA, CL_UNORM_INT8> image2(imgWidth, imgHeight, &(*srcImg2.begin()));
+  std::vector<unsigned char> v((pixelSize+1) * imgWidth * imgHeight);
   for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
     *iter=0;
 
+  //float myfloats[] = {1,2,1,2,4,2,1,2,1};
+  float myfloats[] = {0,0,0,0,1,0,0,0,0};
+  std::vector<float>kernel(myfloats, myfloats + sizeof(myfloats) / sizeof(float) );
+  viennacl::image<CL_RGBA, CL_UNORM_INT8> gaussianFilteredImg  = image2.gausian_filter<std::vector<float>,float>(kernel);
+  gaussianFilteredImg.fast_copy_cpu(v.begin());
 
-  viennacl::image<CL_RGBA, CL_UNORM_INT8> image2(size, size, &(*srcImg2.begin()));
-  viennacl::image<CL_RGBA, CL_UNORM_INT8> image3(size, size, (void*)srcImg3);
-
-  (image2+image3).fast_copy_cpu(v.begin());
-
-  std::cout << std::endl;
-  std::cout << "----------------------------------------------" << std::endl;
-
-  std::cout << "Vector Init" << std::endl;
-  c = 0;
-  for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
+  for(int j=0; j< pixelSize; j++)
   {
-     std::cout << ((int)*iter ) << " ";
-     if (++c % 4 == 0)
-     {
-        std::cout<<std::endl;
-        c = 0;
+    for(int k=0; k<imgHeight; k++)
+      for(int i=0; i< imgWidth;i++)
+      {
+        //resultImg(i,k,j)=v[k*imgWidth*pixelSize +i*pixelSize + j];
+        resultImg(i,k,j)=v[j * imgWidth * imgHeight + k*imgWidth + i];
       }
   }
-  std::cout<<" End Vector" << std::endl;
 
-  std::cout << std::endl;
-  std::cout << "----------------------------------------------" << std::endl;
-  std::cout << std::endl;
+  resultImg.save("milla2.bmp");
 
-  (image2 - image3).fast_copy_cpu(v.begin());
+
+/*
   std::cout << "Vector Result" << std::endl;
   c = 0;
   for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
   {
+
      std::cout << ((int)*iter ) << " ";
      if (++c % 4 == 0)
      {
@@ -125,48 +135,7 @@ int test()
       }
    }
    std::cout<<" End Vector" << std::endl;
-
-  delete[] srcImg3;
-
-  std::cout << std::endl;
-  std::cout << "----------------------------------------------" << std::endl;
-  std::cout << std::endl;
-
-  std::cout << std::endl;
-  std::cout << "-------------------Gaussian Filter--------------------" << std::endl;
-  std::cout << std::endl;
-  std::cout << "Input" << std::endl;
-  std::cout << "Vector Result" << std::endl;
-  c = 0;
-  for(std::vector<unsigned char>::iterator iter=srcImg2.begin(); iter < srcImg2.end();++iter)
-  {
-     std::cout << ((int)*iter ) << " ";
-     if (++c % 4 == 0)
-     {
-        std::cout<<std::endl;
-        c = 0;
-      }
-   }
-   std::cout<<" End Vector" << std::endl;
-
-
-  float myfloats[] = {1,2,1,2,4,2,1,2,1};
-  std::vector<float>kernel(myfloats, myfloats + sizeof(myfloats) / sizeof(float) );
-  viennacl::image<CL_RGBA, CL_UNORM_INT8> gaussianFilteredImg  = image2.gausian_filter<std::vector<float>,float>(kernel);;
-  gaussianFilteredImg.fast_copy_cpu(v.begin());
-  std::cout << "Vector Result" << std::endl;
-  c = 0;
-  for(std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
-  {
-     std::cout << ((int)*iter ) << " ";
-     if (++c % 4 == 0)
-     {
-        std::cout<<std::endl;
-        c = 0;
-      }
-   }
-   std::cout<<" End Vector" << std::endl;
-
+*/
   return retval;
 }
 
