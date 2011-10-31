@@ -27,7 +27,7 @@ struct image<CL_RGBA,CL_UNORM_INT8> {
 			std::string source;
 			source.append(image_add);
 			source.append(image_sub);
-			source.append(image_gaussian_filter);
+			source.append(filter2D);
 
 			std::string prog_name = program_name();
 

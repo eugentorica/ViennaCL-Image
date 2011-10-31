@@ -58,8 +58,8 @@ const char * const image_sub =
     "}\n"
 		" \n"; //image_sub
 
-const char* const image_gaussian_filter =
-    "__kernel void gaussian_filter(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
+const char* const filter2D =
+    "__kernel void filter2D(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
     "     constant float * kernelWeights, float kernelTotalWeight,unsigned int kernelSize)\n"
     "{\n"
 
@@ -101,6 +101,71 @@ const char* const image_gaussian_filter =
     "       // Write the output value to image\n"
     "       write_imagef(dstImg, outImageCoord, outColor );\n"
     "     }\n"
+    "   }\n"
+    " }\n"
+    "}\n";
+
+
+const char* const morphologicalOperation =
+    "__kernel void filter2D(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
+    "     constant float * kernelWeights, unsigned int kernelSize, int operationType,int nrIterations)\n"
+    "{\n"
+
+    " int width = get_image_width(dstImg); \n"
+    " int height = get_image_height(dstImg); \n"
+    " int dimX = get_global_size(0); \n"
+    " int dimY = get_global_size(1); \n"
+    " int kernelEdgeSize = floor(sqrt((float)kernelSize));\n"
+
+    " int portionX = ceil(width / (float)dimX);\n"
+    " int portionY = ceil(height / (float)dimY);\n"
+    " const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | //Natural coordinates \n"
+    "                      CLK_ADDRESS_REPEAT | \n"
+    "                      CLK_FILTER_NEAREST; //Don't interpolate \n"
+    " int glXCoord = get_global_id(0); \n"
+    " int glYCoord = get_global_id(1); \n"
+    " for(int n = 0; n <= portionY; n++)"
+    " {\n"
+    "   for(int m = 0; m <= portionX; m++)"
+    "   {\n"
+    "     int xCoord = glXCoord * portionX + m; \n"
+    "     int yCoord = glYCoord * portionY + n; \n"
+    "     int2 outImageCoord = (int2) (xCoord, yCoord);\n"
+
+    "     if (outImageCoord.x < width && outImageCoord.y < height)\n"
+    "     {\n"
+    "       int2 startImageCoord = (int2) (xCoord - kernelEdgeSize / 2, yCoord - kernelEdgeSize / 2);\n"
+    "       int2 endImageCoord = (int2) (xCoord + kernelEdgeSize / 2 , yCoord + kernelEdgeSize / 2);\n"
+    "       int kernelIndex = 0;\n"
+    "       float4 outColor = (float4)(0, 0, 0, 0);\n"
+
+    "       for(int y = startImageCoord.y; y <= endImageCoord.y; y++)\n"
+    "       {\n"
+    "         for(int x= startImageCoord.x; x <= endImageCoord.x; x++)\n"
+    "         {\n"
+    "           if(kernelWeights[kernelIndex] == 0) \n"
+    "             continue; //Zero value means skip current pixel value\n "
+    "           float4 srcColor = (read_imagef(srcImg, sampler, (int2)(x, y));\n"
+    "           if(operationType == 0){  //erode min \n"
+    "             outColor.x = min(srcColor.x, outColor.x); \n"
+    "             outColor.y = min(srcColor.y, outColor.y); \n"
+    "             outColor.z = min(srcColor.z, outColor.z); \n"
+    "             outColor.w = min(srcColor.w, outColor.w); \n"
+    "           }\n"
+    "           if(operationType == 1){  //dilate max \n"
+    "             outColor.x = max(srcColor.x, outColor.x); \n"
+    "             outColor.y = max(srcColor.y, outColor.y); \n"
+    "             outColor.z = max(srcColor.z, outColor.z); \n"
+    "             outColor.w = max(srcColor.w, outColor.w); \n"
+    "           }\n"
+    "           kernelIndex += 1;\n"
+    "         }\n"
+    "       }\n"
+
+    "       // Write the output value to image\n"
+    "       write_imagef(dstImg, outImageCoord, outColor );\n"
+    "     }\n"
+
     "   }\n"
     " }\n"
     "}\n";
