@@ -12,55 +12,55 @@
 
 namespace viennacl
 {
-  namespace linalg
-  {
-    const int global_group_size = 128;
-    const int local_group_size = 16;
+namespace linalg
+{
+const int global_group_size = 128;
+const int local_group_size = 16;
 
-    template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
-    void add(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1
-        ,const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2
-        , viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
-    {
-      viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
-          viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "add");
-      k.global_work_size(0, global_group_size);
-      k.global_work_size(1, global_group_size);
-      k.local_work_size(0, local_group_size);
-      k.local_work_size(1, local_group_size);
-      viennacl::ocl::enqueue(k(img1, img2, img3));
-    }
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+void add(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1
+         ,const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2
+         , viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
+{
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
+                                    viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "add");
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::ocl::enqueue(k(img1, img2, img3));
+}
 
-    template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
-    void sub(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1
-        ,const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2
-        , viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
-    {
-      viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
-          viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "sub");
-      k.global_work_size(0, global_group_size);
-      k.global_work_size(1, global_group_size);
-      k.local_work_size(0, local_group_size);
-      k.local_work_size(1, local_group_size);
-      viennacl::ocl::enqueue(k(img1, img2, img3));
-    }
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+void sub(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img1
+         ,const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img2
+         , viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & img3)
+{
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
+                                    viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name(), "sub");
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::ocl::enqueue(k(img1, img2, img3));
+}
 
-    template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
-    void gaussian_filter(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
-    viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & imgDst,
-    const viennacl::vector<float> & kernel,float kernelTotalWeight,unsigned int kernelSize)
-    {
-      viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
-          viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
-          , "filter2D");
-      k.global_work_size(0, global_group_size);
-      k.global_work_size(1, global_group_size);
-      k.local_work_size(0, local_group_size);
-      k.local_work_size(1, local_group_size);
-      viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel, kernelTotalWeight, kernelSize));
-    }
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+void gaussian_filter(const viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
+                     viennacl::image<CHANNEL_ORDER, CHANNEL_TYPE> & imgDst,
+                     const viennacl::vector<float> & kernel,float kernelTotalWeight,unsigned int kernelSize)
+{
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(
+                                    viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
+                                    , "filter2D");
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel, kernelTotalWeight, kernelSize));
+}
 
-  }
+}
 }
 
 #endif
