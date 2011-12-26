@@ -129,7 +129,7 @@ namespace viennacl
   class coordinate_matrix;
 
   template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
-  class image;
+  class image2d;
   
   namespace tools
   {

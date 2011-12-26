@@ -11,7 +11,7 @@
 
 #include "viennacl/forwards.h"
 #include "viennacl/ocl/backend.hpp"
-#include "viennacl/linalg/image_operations.hpp"
+#include "viennacl/linalg/image2d_operations.hpp"
 
 #include <iostream>
 
@@ -32,19 +32,19 @@ namespace viennacl {
  * @tparam TYPE  Either float or double. Checked at compile time.
  */
 template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
-class image {
+class image2d {
 public:
 
     /** @brief */
-    image() :
+    image2d() :
             _width(0), _height(0) {
-        viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::init();
+        viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
     }
 
     /** @brief */
-    explicit image(int width, int height,void* ptr=NULL) : _width(width),_height(height) {
+    explicit image2d(int width, int height,void* ptr=NULL) : _width(width),_height(height) {
         std::cout<<"RightBefore kernel init"<<std::endl;
-        viennacl::linalg::kernels::image<CHANNEL_ORDER, CHANNEL_TYPE>::init();
+        viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
         std::cout<<"RightAfter kernel init"<<std::endl;
 
         cl_image_format image_format;
@@ -54,7 +54,7 @@ public:
         _pixels = viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE, &image_format, width, height,ptr);
     }
 
-    explicit image(cl_mem existing_mem, int width, int height):_width(width),_height(height),_pixels(existing_mem)
+    explicit image2d(cl_mem existing_mem, int width, int height):_width(width),_height(height),_pixels(existing_mem)
     {
         _pixels.inc();
     }
@@ -64,37 +64,36 @@ public:
         return _pixels;
     }
 
-    image<CHANNEL_ORDER, CHANNEL_TYPE> operator + (const image<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> operator + (const image2d<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
     {
-        image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
         viennacl::linalg::add(*this, other,result);
         return result;
     }
 
-    image<CHANNEL_ORDER, CHANNEL_TYPE> operator - (const image<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> operator - (const image2d<CHANNEL_ORDER, CHANNEL_TYPE> & other) const
     {
-        image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width,_height);
         viennacl::linalg::sub(*this, other,result);
         return result;
     }
 
-    template <typename KERNEL_COLLECTION_TYPE, typename KERNEL_ELEMENT_TYPE>
-    image<CHANNEL_ORDER, CHANNEL_TYPE> gausian_filter(KERNEL_COLLECTION_TYPE &kernel) const
+    template <typename KERNEL_ELEMENT_TYPE>
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> gausian_filter(unsigned int kernelSize, double sigma) const
     {
         float kernelTotalWeight;
-        image<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height);
-
-        typename KERNEL_COLLECTION_TYPE::iterator it = kernel.begin();
-        for (;it!=kernel.end();it++)
-            kernelTotalWeight+=*it;
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height);
+        std::vector<KERNEL_ELEMENT_TYPE> kernel = getGaussianKernel<KERNEL_ELEMENT_TYPE>(kernelSize, sigma);
+        kernelTotalWeight = 1;
 
         // TODO: Find fast way to transfer CPU kernel to GPU one
-        unsigned int kernelSize = kernel.size();
         vector<KERNEL_ELEMENT_TYPE> gpu_kernel(kernel.size());
-        for (unsigned int gpuIndex = 0 ;gpuIndex<kernelSize; gpuIndex++)
+        for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
+        {
             gpu_kernel[gpuIndex] = kernel[gpuIndex];
+        }
 
-        viennacl::linalg::gaussian_filter(*this,result,gpu_kernel,kernelTotalWeight,kernelSize);
+        viennacl::linalg::convolute(*this, result, gpu_kernel, kernelTotalWeight, kernelSize, kernelSize);
         return result;
     }
 
@@ -122,6 +121,43 @@ public:
 
         VIENNACL_ERR_CHECK(err);
         viennacl::ocl::get_queue().finish();
+    }
+
+
+    //http://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+    template<typename KERNEL_ELEMENT_TYPE>
+    std::vector<KERNEL_ELEMENT_TYPE> getGaussianKernel(unsigned int kernelSize, double sigma) const
+    {
+        if (kernelSize % 2 != 1)
+            throw "ViennaCL: kernelSize must be odd number";
+
+        if (sigma <= 0)
+            sigma =  0.3*(kernelSize/2 - 1) + 0.8;
+
+        double sigmaSquare = sigma * sigma;
+        double pi =  4.0*atan(1.0);
+        double coefficientSum = 0.0;
+
+        std::vector<KERNEL_ELEMENT_TYPE> result(kernelSize*kernelSize);
+        for (uint i = 0; i< kernelSize;i++)
+        {
+            for (uint j = 0; j < kernelSize; j++)
+            {
+                int x =  i - kernelSize / 2;
+                int y =  j - kernelSize / 2;
+                double coefficient =  (x * x + y * y) / (2 * sigmaSquare);
+                result[ i * kernelSize + j] = exp( - 1 * coefficient)/( 2 * pi * sigmaSquare);
+                coefficientSum += result[ i * kernelSize + j];
+            }
+        }
+	
+	typename std::vector<KERNEL_ELEMENT_TYPE>::iterator it;
+        for (it = result.begin(); it!= result.end();it++)
+        {
+            *it = *it / coefficientSum;
+        }
+
+        return result;
     }
 
 private:

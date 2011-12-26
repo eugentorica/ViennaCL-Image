@@ -12,7 +12,7 @@ namespace viennacl {
 namespace linalg {
 namespace kernels {
 
-const char * const image_add =
+const char * const image2d_float_add =
     " \n"
     "__kernel void add(\n"
     "          read_only image2d_t src1,\n"
@@ -35,7 +35,7 @@ const char * const image_add =
     "}\n"
     " \n"; //image_add
 
-const char * const image_sub =
+const char * const image2d_float_sub =
     " \n"
     "__kernel void sub(\n"
     "          read_only image2d_t src1,\n"
@@ -58,8 +58,8 @@ const char * const image_sub =
     "}\n"
     " \n"; //image_sub
 
-const char* const filter2D =
-    "__kernel void filter2D(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
+const char* const image2d_float_convolute =
+    "__kernel void convolute(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
     "     constant float * kernelWeights, float kernelTotalWeight,unsigned int kernelSize)\n"
     "{\n"
 
