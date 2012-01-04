@@ -59,6 +59,19 @@ void convolute(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
     viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel, kernelTotalWeight, kernelWidth, kernelHeight));
 }
 
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE,typename KERNEL_TYPE>
+void grayscale(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
+               viennacl::image2d<CL_LUMINANCE, CHANNEL_TYPE> & imgDst,
+               const viennacl::vector<KERNEL_TYPE> & kernel)
+{
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
+                                , "grayscale");
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel));
+}
 
 }
 }

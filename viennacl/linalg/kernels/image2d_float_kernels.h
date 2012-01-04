@@ -23,6 +23,7 @@ struct image_float {
             source.append(image2d_float_add);
             source.append(image2d_float_sub);
             source.append(image2d_float_convolute);
+	    source.append(image2d_float_grayscale);
 
 
 #ifdef VIENNACL_BUILD_INFO
@@ -34,6 +35,7 @@ struct image_float {
             prog_.add_kernel("add");
             prog_.add_kernel("sub");
             prog_.add_kernel("convolute");
+            prog_.add_kernel("grayscale");
             init_done[context_.handle()] = true;
         }
 
@@ -127,6 +129,36 @@ struct image2d<CL_RGBA,CL_HALF_FLOAT> {
     static std::string program_name()
     {
         return "CL_RGBA_CL_HALF_FLOAT";
+    }
+
+    static void init()
+    {
+        std::string prog_name = program_name();
+        image_float::init(prog_name);
+    }
+};
+
+template <>
+struct image2d<CL_LUMINANCE,CL_UNORM_INT8> {
+
+    static std::string program_name()
+    {
+        return "CL_LUMINANCE_CL_UNORM_INT8";
+    }
+
+    static void init()
+    {
+        std::string prog_name = program_name();
+        image_float::init(prog_name);
+    }
+};
+
+template <>
+struct image2d<CL_RGB,CL_SNORM_INT8> {
+
+    static std::string program_name()
+    {
+        return "CL_RGB_CL_SNORM_INT8";
     }
 
     static void init()

@@ -12,6 +12,7 @@
 #include "viennacl/forwards.h"
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/linalg/image2d_operations.hpp"
+#include "viennacl/tools/image_tools.hpp"
 
 #include <iostream>
 
@@ -36,10 +37,12 @@ class image2d {
 public:
 
     /** @brief */
+    /*
     image2d() :
             _width(0), _height(0) {
         viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
     }
+    */
 
     /** @brief */
     explicit image2d(int width, int height,void* ptr=NULL) : _width(width),_height(height) {
@@ -97,7 +100,27 @@ public:
         return result;
     }
 
-    //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
+    template <typename KERNEL_ELEMENT_TYPE>
+    image2d<CL_LUMINANCE, CHANNEL_TYPE> grayscale() const
+    {
+        std::cout<<std::endl<<"Grayscale"<<std::endl;
+        std::vector<KERNEL_ELEMENT_TYPE> kernel = viennacl::tools::traits::getGrayScaleCoefficients<KERNEL_ELEMENT_TYPE>(CHANNEL_ORDER);
+
+        // TODO: Find fast way to transfer CPU kernel to GPU one
+        viennacl::vector<KERNEL_ELEMENT_TYPE> gpu_kernel(kernel.size());
+        for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
+        {
+            gpu_kernel[gpuIndex] = kernel[gpuIndex];
+        }
+
+        std::cout<<std::endl<<"Invoking grayscale"<<std::endl;
+        image2d<CL_LUMINANCE, CHANNEL_TYPE> result(_width, _height);
+        viennacl::linalg::grayscale(*this, result, gpu_kernel);
+
+        return result;
+    }
+
+      //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
     /** @brief STL-like transfer of a GPU vector to the CPU. The cpu type is assumed to reside in a linear piece of memory, such as e.g. for std::vector.
     *
     * This method is faster than the plain copy() function, because entries are
@@ -122,8 +145,19 @@ public:
         VIENNACL_ERR_CHECK(err);
         viennacl::ocl::get_queue().finish();
     }
+    
+    unsigned int width()
+    {
+      return _width;
+    }
+    
+    unsigned int height()
+    {
+      return _height;
+    }
+    
 
-
+private:
     //http://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
     template<typename KERNEL_ELEMENT_TYPE>
     std::vector<KERNEL_ELEMENT_TYPE> getGaussianKernel(unsigned int kernelSize, double sigma) const
@@ -150,8 +184,8 @@ public:
                 coefficientSum += result[ i * kernelSize + j];
             }
         }
-	
-	typename std::vector<KERNEL_ELEMENT_TYPE>::iterator it;
+
+        typename std::vector<KERNEL_ELEMENT_TYPE>::iterator it;
         for (it = result.begin(); it!= result.end();it++)
         {
             *it = *it / coefficientSum;
@@ -160,7 +194,6 @@ public:
         return result;
     }
 
-private:
     viennacl::ocl::handle<cl_mem> _pixels;
     unsigned int _width;
     unsigned int _height;

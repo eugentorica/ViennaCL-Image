@@ -27,7 +27,7 @@ const char * const image2d_float_add =
     "  if(coordW < w && coordH < h)\n"
     "     write_imagef(dst,coord,val); \n"
     "}\n"
-    " \n"; 
+    " \n";
 
 const char * const image2d_float_sub =
     " \n"
@@ -52,6 +52,7 @@ const char * const image2d_float_sub =
     "}\n"
     " \n";
 
+
 const char* const image2d_float_convolute =
     "__kernel void convolute(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
     "     constant float * kernelWeights, float kernelTotalWeight,unsigned int kernelWidth, unsigned int kernelHeight)\n"
@@ -61,7 +62,7 @@ const char* const image2d_float_convolute =
     " int height = get_image_height(dstImg); \n"
     " int dimX = get_global_size(0); \n"
     " int dimY = get_global_size(1); \n"
-    
+
     " int portionX = ceil(width / (float)dimX);\n"
     " int portionY = ceil(height / (float)dimY);\n"
     " const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | //Natural coordinates \n"
@@ -93,6 +94,44 @@ const char* const image2d_float_convolute =
 
     "       // Write the output value to image\n"
     "       write_imagef(dstImg, outImageCoord, outColor );\n"
+    "     }\n"
+    "   }\n"
+    " }\n"
+    "}\n";
+
+const char* const image2d_float_grayscale =
+    "__kernel void grayscale(read_only image2d_t srcImg,write_only image2d_t dstImg, \n"
+    "     constant float * colorWeights )\n"
+    "{\n"
+
+    " int width = get_image_width(dstImg); \n"
+    " int height = get_image_height(dstImg); \n"
+    " int dimX = get_global_size(0); \n"
+    " int dimY = get_global_size(1); \n"
+
+    " int portionX = ceil(width / (float)dimX);\n"
+    " int portionY = ceil(height / (float)dimY);\n"
+    " const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | //Natural coordinates \n"
+    "                      CLK_ADDRESS_REPEAT | \n"
+    "                      CLK_FILTER_NEAREST; //Don't interpolate \n"
+    " int glXCoord = get_global_id(0); \n"
+    " int glYCoord = get_global_id(1); \n"
+    " for(int n = 0; n <= portionY; n++)"
+    " {\n"
+    "   for(int m = 0; m <= portionX; m++)"
+    "   {\n"
+    "     int xCoord = glXCoord * portionX + m; \n"
+    "     int yCoord = glYCoord * portionY + n; \n"
+    "     int2 outImageCoord = (int2) (xCoord, yCoord);\n"
+    "     if (outImageCoord.x < width && outImageCoord.y < height)\n"
+    "     {\n"
+    "       float4 currentColor = (float4)read_imagef(srcImg, sampler, outImageCoord);\n"
+    "       float dstColor = 0;\n"
+    "       dstColor += currentColor.x * colorWeights[0]; \n"
+    "       dstColor += currentColor.y * colorWeights[1]; \n"
+    "       dstColor += currentColor.z * colorWeights[2]; \n"
+    "       // Write the output value to image\n"
+    "       write_imagef(dstImg, outImageCoord, dstColor );\n"
     "     }\n"
     "   }\n"
     " }\n"
@@ -168,3 +207,5 @@ const char* const morphologicalOperation =
 }
 
 #endif /* _VIENNACL_IMAGE_SOURCE_HPP_ */
+
+

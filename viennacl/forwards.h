@@ -131,6 +131,8 @@ namespace viennacl
   template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
   class image2d;
   
+  
+  
   namespace tools
   {
     //helper for matrix row/col iterators 
@@ -142,7 +144,7 @@ namespace viennacl
       {
           typedef typename MATRIXTYPE::ERROR_SPECIALIZATION_FOR_THIS_MATRIX_TYPE_MISSING          ErrorIndicator;
       }
-    };
+    };     
   }
     
   namespace linalg
@@ -229,9 +231,13 @@ namespace viennacl
     };
     
     
-  } //namespace linalg
+  } //namespace linalg 
+
+    
+  
 } //namespace viennacl
 
 #endif
 
 /*@}*/
+
