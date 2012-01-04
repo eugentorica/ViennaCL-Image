@@ -86,7 +86,7 @@ public:
     {
         float kernelTotalWeight;
         image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height);
-        std::vector<KERNEL_ELEMENT_TYPE> kernel = getGaussianKernel<KERNEL_ELEMENT_TYPE>(kernelSize, sigma);
+        std::vector<KERNEL_ELEMENT_TYPE> kernel = viennacl::tools::traits::getGaussianKernel<KERNEL_ELEMENT_TYPE>(kernelSize, sigma);
         kernelTotalWeight = 1;
 
         // TODO: Find fast way to transfer CPU kernel to GPU one
@@ -158,42 +158,7 @@ public:
     
 
 private:
-    //http://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
-    template<typename KERNEL_ELEMENT_TYPE>
-    std::vector<KERNEL_ELEMENT_TYPE> getGaussianKernel(unsigned int kernelSize, double sigma) const
-    {
-        if (kernelSize % 2 != 1)
-            throw "ViennaCL: kernelSize must be odd number";
-
-        if (sigma <= 0)
-            sigma =  0.3*(kernelSize/2 - 1) + 0.8;
-
-        double sigmaSquare = sigma * sigma;
-        double pi =  4.0*atan(1.0);
-        double coefficientSum = 0.0;
-
-        std::vector<KERNEL_ELEMENT_TYPE> result(kernelSize*kernelSize);
-        for (uint i = 0; i< kernelSize;i++)
-        {
-            for (uint j = 0; j < kernelSize; j++)
-            {
-                int x =  i - kernelSize / 2;
-                int y =  j - kernelSize / 2;
-                double coefficient =  (x * x + y * y) / (2 * sigmaSquare);
-                result[ i * kernelSize + j] = exp( - 1 * coefficient)/( 2 * pi * sigmaSquare);
-                coefficientSum += result[ i * kernelSize + j];
-            }
-        }
-
-        typename std::vector<KERNEL_ELEMENT_TYPE>::iterator it;
-        for (it = result.begin(); it!= result.end();it++)
-        {
-            *it = *it / coefficientSum;
-        }
-
-        return result;
-    }
-
+    
     viennacl::ocl::handle<cl_mem> _pixels;
     unsigned int _width;
     unsigned int _height;
@@ -203,3 +168,4 @@ private:
 } //namespace viennacl
 
 #endif /* _VIENNACL_IMAGE_HPP_ */
+
