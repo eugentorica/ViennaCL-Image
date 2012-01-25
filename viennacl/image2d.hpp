@@ -136,18 +136,7 @@ public:
         return result;
     }
 
-    //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
-    /** @brief STL-like transfer of a GPU vector to the CPU. The cpu type is assumed to reside in a linear piece of memory, such as e.g. for std::vector.
-    *
-    * This method is faster than the plain copy() function, because entries are
-    * directly written to the cpu vector, starting with &(*cpu.begin()) However,
-    * keep in mind that the cpu type MUST represent a linear piece of
-    * memory, otherwise you will run into undefined behavior.
-    *
-    * @param gpu_begin  GPU iterator pointing to the beginning of the gpu vector (STL-like)
-    * @param gpu_end    GPU iterator pointing to the end of the vector (STL-like)
-    * @param cpu_begin  Output iterator for the cpu vector. The cpu vector must be at least as long as the gpu vector!
-    */
+
     template <typename CPU_ITERATOR>
     void fast_copy_cpu(CPU_ITERATOR cpu_begin)
     {
