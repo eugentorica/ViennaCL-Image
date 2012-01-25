@@ -23,7 +23,9 @@ struct image_float {
             source.append(image2d_float_add);
             source.append(image2d_float_sub);
             source.append(image2d_float_convolute);
-	    source.append(image2d_float_grayscale);
+            source.append(image2d_float_grayscale);
+            source.append(image2d_float_pyrup);
+            source.append(image2d_float_pyrdown);
 
 
 #ifdef VIENNACL_BUILD_INFO
@@ -36,6 +38,8 @@ struct image_float {
             prog_.add_kernel("sub");
             prog_.add_kernel("convolute");
             prog_.add_kernel("grayscale");
+            prog_.add_kernel("pyrup");
+            prog_.add_kernel("pyrdown");
             init_done[context_.handle()] = true;
         }
 

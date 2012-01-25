@@ -49,7 +49,7 @@ int main()
       std::cout << "  No.:              " << std::distance(devices.begin(), iter) << std::endl;
       std::cout << "  Name:             " << iter->name() << std::endl;
       std::cout << "  Compute Units:    " << iter->max_compute_units() << std::endl;
-      std::cout << "  Workgroup Size:   " << iter->max_workgroup_size() << std::endl;
+      std::cout << "  Workgroup Size:   " << iter->max_workgroup_size() << std::endl;      
       std::cout << "  Global Memory:    " << iter->global_memory()/(1024*1024) << " MB" << std::endl;
       std::cout << "  Local Memory:     " << iter->local_memory()/1024 << " KB" << std::endl;
       std::cout << "  Max-alloc Memory: " << iter->max_allocable_memory()/(1024*1024) << " MB" << std::endl;

@@ -151,7 +151,7 @@ unsigned int getBestKernel(const char * dirname, std::string & kernel_name, unsi
 }
 
 
-void writeKernelInit(std::ostream & kernel_file, const char * dirname, std::string & subfolder, bool is_float)
+void writeKernelInit(std::ostream & kernel_file, const char * dirname, std::string & subfolder)
 {
     //extract alignment information from subfolder string:
     std::istringstream stream(subfolder.substr(5, subfolder.size()-5));
@@ -162,10 +162,13 @@ void writeKernelInit(std::ostream & kernel_file, const char * dirname, std::stri
 
     kernel_file << "   template <>" << std::endl;
     kernel_file << "   struct " << dirname;
+    kernel_file << "<cl_channel_order CHANNEL_ORDER, ";
+    
     if (is_float)
         kernel_file << "<float, ";
     else
         kernel_file << "<double, ";
+    
     kernel_file << alignment << ">" << std::endl;
     kernel_file << "   {" << std::endl;
 

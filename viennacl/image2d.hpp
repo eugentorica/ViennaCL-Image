@@ -14,24 +14,14 @@
 #include "viennacl/linalg/image2d_operations.hpp"
 #include "viennacl/tools/image_tools.hpp"
 
+#include "viennacl/vector.hpp"
+
+#include <math.h>
+
 #include <iostream>
 
 namespace viennacl {
-/** @brief A proxy for scalar expressions (e.g. from inner vector products)
- *
- * assumption: dim(LHS) >= dim(RHS), where dim(scalar) = 0, dim(vector) = 1 and dim(matrix = 2)
- * @tparam LHS   The left hand side operand
- * @tparam RHS   The right hand side operand
- * @tparam OP    The operation tag
- */
 
-/** @brief This class represents a single scalar value on the GPU and behaves mostly like a built-in scalar type like float or double.
- *
- * Since every read and write operation requires a CPU->GPU or GPU->CPU transfer, this type should be used with care.
- * The advantage of this type is that the GPU command queue can be filled without blocking read operations.
- *
- * @tparam TYPE  Either float or double. Checked at compile time.
- */
 template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
 class image2d {
 public:
@@ -42,25 +32,23 @@ public:
             _width(0), _height(0) {
         viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
     }
-    */
 
-    /** @brief */
-    explicit image2d(int width, int height,void* ptr=NULL) : _width(width),_height(height) {
-        std::cout<<"RightBefore kernel init"<<std::endl;
-        viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
-        std::cout<<"RightAfter kernel init"<<std::endl;
-
-        cl_image_format image_format;
-        image_format.image_channel_data_type = CHANNEL_TYPE;
-        image_format.image_channel_order = CHANNEL_ORDER;
-        std::cout<<"RightBefore create image"<<std::endl;
-        _pixels = viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE, &image_format, width, height,ptr);
-    }
-
-    explicit image2d(cl_mem existing_mem, int width, int height):_width(width),_height(height),_pixels(existing_mem)
+    explicit image2d(cl_mem existing_mem, int width, int height): _pixels(existing_mem), _width(width), _height(height)
     {
         _pixels.inc();
     }
+    */
+
+    /** @brief */
+    image2d(unsigned int width, unsigned int height,void* ptr=NULL) : _width(width),_height(height) {
+        viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::init();
+        cl_image_format image_format;
+        image_format.image_channel_data_type = CHANNEL_TYPE;
+        image_format.image_channel_order = CHANNEL_ORDER;
+        
+        _pixels = viennacl::ocl::current_context().create_image2d(CL_MEM_READ_WRITE, &image_format, width, height,ptr);
+    }
+
 
     /** @brief Returns the OpenCL handle */
     const viennacl::ocl::handle<cl_mem> & handle() const {
@@ -82,19 +70,16 @@ public:
     }
 
     template <typename KERNEL_ELEMENT_TYPE>
-    image2d<CHANNEL_ORDER, CHANNEL_TYPE> gausian_filter(unsigned int kernelSize, double sigma) const
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> gaussian_filter(unsigned int kernelSize, double sigma) const
     {
-        float kernelTotalWeight;
         image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height);
         std::vector<KERNEL_ELEMENT_TYPE> kernel = viennacl::tools::traits::getGaussianKernel<KERNEL_ELEMENT_TYPE>(kernelSize, sigma);
-        kernelTotalWeight = 1;
+        float kernelTotalWeight = 0;
 
-        // TODO: Find fast way to transfer CPU kernel to GPU one
         vector<KERNEL_ELEMENT_TYPE> gpu_kernel(kernel.size());
+        viennacl::fast_copy(kernel, gpu_kernel);
         for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
-        {
-            gpu_kernel[gpuIndex] = kernel[gpuIndex];
-        }
+            kernelTotalWeight += kernel[gpuIndex];
 
         viennacl::linalg::convolute(*this, result, gpu_kernel, kernelTotalWeight, kernelSize, kernelSize);
         return result;
@@ -103,24 +88,55 @@ public:
     template <typename KERNEL_ELEMENT_TYPE>
     image2d<CL_LUMINANCE, CHANNEL_TYPE> grayscale() const
     {
-        std::cout<<std::endl<<"Grayscale"<<std::endl;
         std::vector<KERNEL_ELEMENT_TYPE> kernel = viennacl::tools::traits::getGrayScaleCoefficients<KERNEL_ELEMENT_TYPE>(CHANNEL_ORDER);
 
-        // TODO: Find fast way to transfer CPU kernel to GPU one
         viennacl::vector<KERNEL_ELEMENT_TYPE> gpu_kernel(kernel.size());
-        for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
-        {
-            gpu_kernel[gpuIndex] = kernel[gpuIndex];
-        }
+        viennacl::fast_copy(kernel, gpu_kernel);
 
-        std::cout<<std::endl<<"Invoking grayscale"<<std::endl;
         image2d<CL_LUMINANCE, CHANNEL_TYPE> result(_width, _height);
         viennacl::linalg::grayscale(*this, result, gpu_kernel);
 
         return result;
     }
 
-      //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> pyrUp() const
+    {
+        std::vector<float> kernel = viennacl::tools::traits::getPyramidKernel();
+        float kernelTotalWeight = 0;
+        unsigned int kernelSize = (unsigned int)sqrt(kernel.size());
+        viennacl::vector<float> gpu_kernel(kernel.size());
+        viennacl::fast_copy(kernel, gpu_kernel);
+
+        for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
+            kernelTotalWeight += kernel[gpuIndex];
+
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(floor(_width / 2), floor(_height / 2));
+        viennacl::linalg::pyrUp(*this, result, gpu_kernel, kernelTotalWeight, kernelSize);
+
+        return result;
+    }
+
+    image2d<CHANNEL_ORDER, CHANNEL_TYPE> pyrDown() const
+    {
+        std::vector<float> kernel = viennacl::tools::traits::getPyramidKernel();
+
+        unsigned int kernelSize = (unsigned int)sqrt(kernel.size());
+        viennacl::vector<float> gpu_kernel(kernel.size());
+        viennacl::fast_copy(kernel, gpu_kernel);
+
+        float kernelTotalWeight = 0;
+        for (unsigned int gpuIndex = 0 ;gpuIndex < kernel.size(); gpuIndex++)
+            kernelTotalWeight += kernel[gpuIndex];
+
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> result( 2 * _width, 2 * _height);
+
+        // Divide kernelTotalWeight by 4 as surface of the image increased 4 times
+        // and this factor will keep image brightness the same as in original image
+        viennacl::linalg::pyrDown(*this, result, gpu_kernel, kernelTotalWeight / 4 , kernelSize);
+        return result;
+    }
+
+    //from gpu to cpu. Type assumption: cpu_vec lies in a linear memory chunk
     /** @brief STL-like transfer of a GPU vector to the CPU. The cpu type is assumed to reside in a linear piece of memory, such as e.g. for std::vector.
     *
     * This method is faster than the plain copy() function, because entries are
@@ -145,20 +161,27 @@ public:
         VIENNACL_ERR_CHECK(err);
         viennacl::ocl::get_queue().finish();
     }
-    
-    unsigned int width()
+    /*
+        image2d<CHANNEL_ORDER, CHANNEL_TYPE> clone() const
+        {
+            image2d<CHANNEL_ORDER, CHANNEL_TYPE> result(_width, _height,_pixels);
+            return result;
+        }
+    */
+
+    unsigned int width() const
     {
-      return _width;
+        return _width;
     }
-    
-    unsigned int height()
+
+    unsigned int height() const
     {
-      return _height;
+        return _height;
     }
-    
+
 
 private:
-    
+
     viennacl::ocl::handle<cl_mem> _pixels;
     unsigned int _width;
     unsigned int _height;

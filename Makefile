@@ -38,19 +38,22 @@ CMAKE_COMMAND = /usr/bin/cmake
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
 
+# The program to use to edit the cache.
+CMAKE_EDIT_COMMAND = /usr/bin/ccmake
+
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/sanda/Desktop/ViennaCL-1.1.2
+CMAKE_SOURCE_DIR = /home/jenea/Desktop/ViennaCL-1.1.2
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/sanda/Desktop/ViennaCL-1.1.2
+CMAKE_BINARY_DIR = /home/jenea/Desktop/ViennaCL-1.1.2
 
 #=============================================================================
 # Targets provided globally by CMake.
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running interactive CMake command-line interface..."
-	/usr/bin/cmake -i .
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -69,9 +72,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sanda/Desktop/ViennaCL-1.1.2/CMakeFiles /home/sanda/Desktop/ViennaCL-1.1.2/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jenea/Desktop/ViennaCL-1.1.2/CMakeFiles /home/jenea/Desktop/ViennaCL-1.1.2/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sanda/Desktop/ViennaCL-1.1.2/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jenea/Desktop/ViennaCL-1.1.2/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -149,6 +152,19 @@ custom-kernels: cmake_check_build_system
 custom-kernels/fast:
 	$(MAKE) -f CMakeFiles/custom-kernels.dir/build.make CMakeFiles/custom-kernels.dir/build
 .PHONY : custom-kernels/fast
+
+#=============================================================================
+# Target rules for targets named image2dbench
+
+# Build rule for target.
+image2dbench: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 image2dbench
+.PHONY : image2dbench
+
+# fast build rule for target.
+image2dbench/fast:
+	$(MAKE) -f CMakeFiles/image2dbench.dir/build.make CMakeFiles/image2dbench.dir/build
+.PHONY : image2dbench/fast
 
 #=============================================================================
 # Target rules for targets named matrixparams
@@ -264,6 +280,30 @@ examples/benchmarks/blas3.s: examples/benchmarks/blas3.cpp.s
 examples/benchmarks/blas3.cpp.s:
 	$(MAKE) -f CMakeFiles/blas3bench.dir/build.make CMakeFiles/blas3bench.dir/examples/benchmarks/blas3.cpp.s
 .PHONY : examples/benchmarks/blas3.cpp.s
+
+examples/benchmarks/image2d.o: examples/benchmarks/image2d.cpp.o
+.PHONY : examples/benchmarks/image2d.o
+
+# target to build an object file
+examples/benchmarks/image2d.cpp.o:
+	$(MAKE) -f CMakeFiles/image2dbench.dir/build.make CMakeFiles/image2dbench.dir/examples/benchmarks/image2d.cpp.o
+.PHONY : examples/benchmarks/image2d.cpp.o
+
+examples/benchmarks/image2d.i: examples/benchmarks/image2d.cpp.i
+.PHONY : examples/benchmarks/image2d.i
+
+# target to preprocess a source file
+examples/benchmarks/image2d.cpp.i:
+	$(MAKE) -f CMakeFiles/image2dbench.dir/build.make CMakeFiles/image2dbench.dir/examples/benchmarks/image2d.cpp.i
+.PHONY : examples/benchmarks/image2d.cpp.i
+
+examples/benchmarks/image2d.s: examples/benchmarks/image2d.cpp.s
+.PHONY : examples/benchmarks/image2d.s
+
+# target to generate assembly for a file
+examples/benchmarks/image2d.cpp.s:
+	$(MAKE) -f CMakeFiles/image2dbench.dir/build.make CMakeFiles/image2dbench.dir/examples/benchmarks/image2d.cpp.s
+.PHONY : examples/benchmarks/image2d.cpp.s
 
 examples/benchmarks/opencl.o: examples/benchmarks/opencl.cpp.o
 .PHONY : examples/benchmarks/opencl.o
@@ -549,6 +589,7 @@ help:
 	@echo "... custom-context"
 	@echo "... custom-kernels"
 	@echo "... edit_cache"
+	@echo "... image2dbench"
 	@echo "... matrixparams"
 	@echo "... openclbench"
 	@echo "... parameter_reader"
@@ -560,6 +601,9 @@ help:
 	@echo "... examples/benchmarks/blas3.o"
 	@echo "... examples/benchmarks/blas3.i"
 	@echo "... examples/benchmarks/blas3.s"
+	@echo "... examples/benchmarks/image2d.o"
+	@echo "... examples/benchmarks/image2d.i"
+	@echo "... examples/benchmarks/image2d.s"
 	@echo "... examples/benchmarks/opencl.o"
 	@echo "... examples/benchmarks/opencl.i"
 	@echo "... examples/benchmarks/opencl.s"

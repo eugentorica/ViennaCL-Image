@@ -52,7 +52,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define VIENNACL_DEBUG_ALL
 
 using namespace boost::numeric;
 
@@ -93,17 +92,98 @@ std::vector<unsigned char>  cimg_to_vector(const cimg_library::CImg<unsigned cha
 
 const int pixelSize = 4;
 
+int test_image_subtraction()
+{
+    cimg_library::CImg<unsigned char> cImgSrcImg1("walle1.jpg");
+    cimg_library::CImg<unsigned char> cImgSrcImg2("walle2.jpg");
+    uint vector_spectrum = 4;
+
+    std::vector<unsigned char> vector1 = cimg_to_vector(cImgSrcImg1, vector_spectrum);
+    std::vector<unsigned char> vector2 = cimg_to_vector(cImgSrcImg2, vector_spectrum);
+
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> srcImg1(cImgSrcImg1.width(), cImgSrcImg1.height(), &(*vector1.begin()));
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> srcImg2(cImgSrcImg2.width(), cImgSrcImg2.height(), &(*vector2.begin()));
+
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> imgResult = srcImg1 - srcImg2;
+
+    std::vector<unsigned char> v((pixelSize+1) * imgResult.width() * imgResult.height());
+    imgResult.fast_copy_cpu(v.begin());
+    cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, imgResult.width(), imgResult.height(), pixelSize);
+    resultImg.save("subtraction.bmp");
+}
+
+int test_gaussianBlur(viennacl::image2d<CL_RGBA, CL_UNORM_INT8> &image2)
+{
+    unsigned int kernelWitdth = 5;
+    unsigned int kernelHeight = kernelWitdth;
+
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> gaussianFilteredImg  = image2.gaussian_filter<float>(kernelWitdth,10);
+    std::vector<unsigned char> v((pixelSize+1) * gaussianFilteredImg.width() * gaussianFilteredImg.height());
+    gaussianFilteredImg.fast_copy_cpu(v.begin());
+
+    cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, gaussianFilteredImg.width(), gaussianFilteredImg.height(), pixelSize);
+    resultImg.save("milla2_gaussian_blur.bmp");
+
+    return 0;
+}
+
 int test_grayscale(viennacl::image2d<CL_RGBA, CL_UNORM_INT8> &image2)
 {
-    std::cout<<"--------------------------"<<std::endl;
-    std::vector<unsigned char> v(( pixelSize+1) * image2.width() * image2.height());
+    std::cout<<std::endl<<"--------------------------"<<std::endl;
     viennacl::image2d<CL_LUMINANCE, CL_UNORM_INT8> grayImg = image2.grayscale<float>();
+
+    std::vector<unsigned char> v(( pixelSize+1) * grayImg.width() * grayImg.height());
     grayImg.fast_copy_cpu(v.begin());
+
     cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, image2.width(), image2.height(), 1);
     resultImg.save("gray_milla2.bmp");
 
     return 0;
 }
+
+
+int test_pyrup(viennacl::image2d<CL_RGBA, CL_UNORM_INT8> &image2)
+{
+    std::cout<<std::endl<<"--------------------------"<<std::endl;
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> pyrUpImg = image2.pyrUp();
+
+    std::vector<unsigned char> v(( pixelSize+1) * pyrUpImg.width() * pyrUpImg.height());
+    pyrUpImg.fast_copy_cpu(v.begin());
+    cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, pyrUpImg.width(), pyrUpImg.height(), pixelSize);
+    std::cout<<"PyrUp Result Image size: "<<resultImg.width()<<"x"<<resultImg.height()<<std::endl;
+    resultImg.save("pyrup_milla2.bmp");
+
+    return 0;
+}
+
+int test_pyrdown(viennacl::image2d<CL_RGBA, CL_UNORM_INT8> &image2)
+{
+
+    std::vector<unsigned char> initialVector(( pixelSize+1) * image2.width() * image2.height());
+    image2.fast_copy_cpu(initialVector.begin());
+    cimg_library::CImg<unsigned char> initialImg = vector_to_cimg(initialVector, image2.width(), image2.height(), pixelSize);
+    initialImg.save("image_afer_pyrup.bmp");
+
+
+    std::cout<<std::endl<<"--------------------------"<<std::endl;
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> pyrDownImg = image2.pyrDown();
+
+    std::vector<unsigned char> v(( pixelSize+1) * pyrDownImg.width() * pyrDownImg.height());
+    pyrDownImg.fast_copy_cpu(v.begin());
+    cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, pyrDownImg.width(), pyrDownImg.height(), pixelSize);
+    std::cout<<"PyrDown Result Image size: "<<resultImg.width()<<"x"<<resultImg.height()<<std::endl;
+    resultImg.save("pyrdown_milla2.bmp");
+
+    return 0;
+}
+
+
+//#define TestPyrUp
+//#define TestPyrDown
+
+#define TestGaussianBlur
+#define TestGrayScale
+//#define TestSubtraction
 
 int test()
 {
@@ -112,34 +192,37 @@ int test()
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << std::endl;
 
-    cimg_library::CImg<unsigned char> srcImg("milla.bmp");
-
-    int imgWidth = srcImg.width();
-    int imgHeight = srcImg.height();
-    
-    std::vector<unsigned char> srcImg3(pixelSize * imgWidth * imgHeight);
-
-    srand ( time(NULL) );
-
+    cimg_library::CImg<unsigned char> srcImg("walle1.jpg");   
     uint vector_spectrum = 4;
     std::vector<unsigned char> srcImg2 = cimg_to_vector(srcImg, vector_spectrum);
+    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> image2(srcImg.width(), srcImg.height(), &(*srcImg2.begin()));
 
-    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> image2(imgWidth, imgHeight, &(*srcImg2.begin()));
-    std::vector<unsigned char> v((pixelSize+1) * imgWidth * imgHeight);
-    for (std::vector<unsigned char>::iterator iter=v.begin(); iter < v.end();++iter)
-        *iter=0;
-
-    unsigned int kernelWitdth = 21;
-    unsigned int kernelHeight = kernelWitdth;
-
-    viennacl::image2d<CL_RGBA, CL_UNORM_INT8> gaussianFilteredImg  = image2.gausian_filter<float>(kernelWitdth,10);
-    gaussianFilteredImg.fast_copy_cpu(v.begin());
-
-    cimg_library::CImg<unsigned char> resultImg = vector_to_cimg(v, srcImg.width(), srcImg.height(), srcImg.spectrum()+1);
-    resultImg.save("milla2.bmp");
-
-    test_grayscale(image2);
+    std::vector<unsigned char> srcImg3(pixelSize * srcImg.width() * srcImg.height());
+    srand ( time(NULL) );
     
+#ifdef TestSubtraction
+    test_image_subtraction();
+#endif
+
+#ifdef TestGaussianBlur
+    test_gaussianBlur(image2);
+#endif
+
+#ifdef TestGrayScale
+    test_grayscale(image2);
+#endif
+
+
+#ifdef TestPyrDown
+    test_pyrdown(image2);
+#endif
+
+#ifdef TestPyrUp
+    test_pyrup(image2);
+#endif
+
+
+
     return retval;
 }
 

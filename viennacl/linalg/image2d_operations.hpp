@@ -52,10 +52,12 @@ void convolute(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
 {
     viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
                                 , "convolute");
+    
     k.global_work_size(0, global_group_size);
     k.global_work_size(1, global_group_size);
     k.local_work_size(0, local_group_size);
     k.local_work_size(1, local_group_size);
+    
     viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel, kernelTotalWeight, kernelWidth, kernelHeight));
 }
 
@@ -72,6 +74,41 @@ void grayscale(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
     k.local_work_size(1, local_group_size);
     viennacl::ocl::enqueue(k(imgSrc, imgDst, kernel));
 }
+
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+void pyrUp(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
+           viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgDst,
+           const viennacl::vector<float> & kernel,float kernelTotalWeight,unsigned int kernelSize)
+{
+    viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> tempImg( imgSrc.width(), imgSrc.height());
+    convolute(imgSrc, tempImg, kernel, kernelTotalWeight, kernelSize, kernelSize);
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
+                                , "pyrup");
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::ocl::enqueue(k(tempImg, imgDst));    
+}
+
+template<cl_channel_order CHANNEL_ORDER, cl_channel_type CHANNEL_TYPE>
+void pyrDown(const viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgSrc,
+             viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> & imgDst,
+             const viennacl::vector<float> & kernel,float kernelTotalWeight,unsigned int kernelSize)
+{
+    viennacl::ocl::kernel & k = viennacl::ocl::get_kernel(viennacl::linalg::kernels::image2d<CHANNEL_ORDER, CHANNEL_TYPE>::program_name()
+                                , "pyrdown");
+    
+    k.global_work_size(0, global_group_size);
+    k.global_work_size(1, global_group_size);
+    k.local_work_size(0, local_group_size);
+    k.local_work_size(1, local_group_size);
+    viennacl::image2d<CHANNEL_ORDER, CHANNEL_TYPE> tempImg( imgDst.width(),imgDst.height());
+    viennacl::ocl::enqueue(k(imgSrc, tempImg));   
+    convolute(tempImg, imgDst , kernel, kernelTotalWeight, kernelSize, kernelSize);    
+}
+
+
 
 }
 }
