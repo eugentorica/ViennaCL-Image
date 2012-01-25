@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/custom-kernels.dir/examples/tutorial/custom-kernels.cpp.o  -o custom-kernels -rdynamic -lOpenCL 

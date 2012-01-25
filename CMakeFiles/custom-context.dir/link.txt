@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/custom-context.dir/examples/tutorial/custom-context.cpp.o  -o custom-context -rdynamic -lOpenCL 

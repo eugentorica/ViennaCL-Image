@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/viennacl-info.dir/examples/tutorial/viennacl-info.cpp.o  -o viennacl-info -rdynamic -lOpenCL 
